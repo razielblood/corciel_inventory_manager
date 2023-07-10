@@ -20,4 +20,7 @@ type Storage interface {
 	GetCategories() ([]*types.Category, error)
 	GetManufacturers() ([]*types.Manufacturer, error)
 	GetProducts() ([]*types.Product, error)
+
+	LoginUser(*types.LoginRequest) (*types.User, error)
+	CreateUser(*types.CreateUserRequest) (*types.User, error)
 }

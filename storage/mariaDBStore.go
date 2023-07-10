@@ -160,3 +160,60 @@ func (s *MariaDBStore) parseProduct(rows *sql.Rows, product *types.Product) erro
 	product.Category = category
 	return nil
 }
+
+func (s *MariaDBStore) LoginUser(loginRequest *types.LoginRequest) (*types.User, error) {
+	query := "select Username, FirstName, LastName, Email from Users where Username = ? and Password= ?"
+	rows, err := s.db.Query(query, loginRequest.Username, loginRequest.Password)
+	if err != nil {
+		return nil, err
+	}
+	exists := rows.Next()
+	if !exists {
+		return nil, fmt.Errorf("username %v doesn't exists or the password is incorrect", loginRequest.Username)
+	}
+	user := new(types.User)
+	rows.Scan(
+		&user.Username,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+	)
+	return user, nil
+}
+
+func (s *MariaDBStore) CreateUser(createUserRequest *types.CreateUserRequest) (*types.User, error) {
+	query := "select Username from Users where Username = ?"
+	rows, err := s.db.Query(query, createUserRequest.Username)
+	if err != nil {
+		return nil, err
+	}
+	exists := rows.Next()
+	if exists {
+		return nil, fmt.Errorf("username %v already exists", createUserRequest.Username)
+	}
+
+	query = "insert into Users (Username, Password, FirstName, LastName, Email) values (?, ?, ?, ?, ?)"
+	_, err = s.db.Query(query, createUserRequest.Username, createUserRequest.Password, createUserRequest.FirstName, createUserRequest.LastName, createUserRequest.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	query = "select Username, FirstName, LastName, Email from Users where Username = ?"
+	rows, err = s.db.Query(query, createUserRequest.Username)
+	if err != nil {
+		return nil, err
+	}
+	exists = rows.Next()
+	if !exists {
+		return nil, fmt.Errorf("user %v couldn't be created", createUserRequest.Username)
+	}
+	user := new(types.User)
+	rows.Scan(
+		&user.Username,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+	)
+
+	return user, nil
+}
