@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"database/sql"
+
 	"github.com/razielblood/corciel_inventory_manager/types"
 )
 
@@ -23,6 +25,28 @@ type Storage interface {
 
 	LoginUser(*types.LoginRequest) (*types.User, error)
 	CreateUser(*types.CreateUserRequest) (*types.User, error)
+}
+
+func parseProduct(rows *sql.Rows, product *types.Product) error {
+	var manufacturerID, categoryID int
+	err := rows.Scan(
+		&product.ID,
+		&product.Name,
+		&product.Description,
+		&product.WeightInKG,
+		&product.PiecesPerPackage,
+		&product.Image,
+		&manufacturerID,
+		&categoryID,
+	)
+	if err != nil {
+		return err
+	}
+
+	product.Manufacturer = &types.Manufacturer{ID: manufacturerID}
+	product.Category = &types.Category{ID: categoryID}
+
+	return nil
 }
 
 func GetCategoriesAsMap(s Storage) (map[int]*types.Category, error) {

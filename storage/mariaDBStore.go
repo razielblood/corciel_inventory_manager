@@ -174,28 +174,6 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 	return products, nil
 }
 
-func parseProduct(rows *sql.Rows, product *types.Product) error {
-	var manufacturerID, categoryID int
-	err := rows.Scan(
-		&product.ID,
-		&product.Name,
-		&product.Description,
-		&product.WeightInKG,
-		&product.PiecesPerPackage,
-		&product.Image,
-		&manufacturerID,
-		&categoryID,
-	)
-	if err != nil {
-		return err
-	}
-
-	product.Manufacturer = &types.Manufacturer{ID: manufacturerID}
-	product.Category = &types.Category{ID: categoryID}
-
-	return nil
-}
-
 func (s *MariaDBStore) LoginUser(loginRequest *types.LoginRequest) (*types.User, error) {
 	query := "select Username, FirstName, LastName, Email from Users where Username = ? and Password= ?"
 	rows, err := s.db.Query(query, loginRequest.Username, loginRequest.Password)
