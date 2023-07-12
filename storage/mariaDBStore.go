@@ -3,7 +3,6 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/razielblood/corciel_inventory_manager/types"
@@ -24,8 +23,6 @@ func NewMariaDBStore(dbUsername, dbPass, dbHost, dbPort, dbName string) (*MariaD
 		AllowNativePasswords: true,
 	}
 
-	log.Printf("Connecting to Maria DB using the following info: %+v\n", cfg)
-
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		return nil, err
@@ -33,19 +30,20 @@ func NewMariaDBStore(dbUsername, dbPass, dbHost, dbPort, dbName string) (*MariaD
 	return &MariaDBStore{db: db}, nil
 }
 
-func (db *MariaDBStore) CreateCategory(category *types.Category) error {
-	fmt.Println("Under construction =)")
-	return nil
+func (s *MariaDBStore) CreateCategory(category *types.Category) error {
+	query := "insert into Categories (Name, Description) values (?, ?)"
+	_, err := s.db.Query(query, category.Name, category.Description)
+	return err
 }
-func (db *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
-	fmt.Println("Under construction =)")
-	return nil
+func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
+	query := "insert into Manufacturers (Name) values (?)"
+	_, err := s.db.Query(query, manufacturer.Name)
+	return err
 }
 func (s *MariaDBStore) CreateProduct(product *types.Product) error {
 	query := `insert into Products (Name, Description, WeightInKG, PiecesPerPackage, Image, Manufacturer, Category) 
 	values 
 	(?, ?, ?, ?, ?, ?, ?)`
-	log.Printf("Executed query: %v\n", query)
 	_, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID)
 	return err
 }
@@ -101,17 +99,50 @@ func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
 		return nil, fmt.Errorf("product with id %v doesn't exists", productID)
 	}
 	product := new(types.Product)
-	s.parseProduct(rows, product)
+	parseProduct(rows, product)
+
+	product.Manufacturer, _ = s.GetManufacturerByID(product.Manufacturer.ID)
+	product.Category, _ = s.GetCategoryByID(product.Category.ID)
+
 	return product, nil
 }
 
-func (db *MariaDBStore) GetCategories() ([]*types.Category, error) {
-	fmt.Println("Under construction =)")
-	return nil, nil
+func (s *MariaDBStore) GetCategories() ([]*types.Category, error) {
+	query := "select (ID, Name, Description) from Categories"
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	categories := []*types.Category{}
+	for rows.Next() {
+		category := new(types.Category)
+		err := rows.Scan(&category.ID,
+			&category.Name,
+			&category.Description)
+		if err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+	return categories, nil
 }
-func (db *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
-	fmt.Println("Under construction =)")
-	return nil, nil
+func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
+	query := "select (ID, Name) from Manufacturers"
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	manufacturers := []*types.Manufacturer{}
+	for rows.Next() {
+		manufacturer := new(types.Manufacturer)
+		err := rows.Scan(&manufacturer.ID,
+			&manufacturer.Name)
+		if err != nil {
+			return nil, err
+		}
+		manufacturers = append(manufacturers, manufacturer)
+	}
+	return manufacturers, nil
 }
 func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 	query := "select * from Products"
@@ -119,20 +150,31 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 	if err != nil {
 		return nil, err
 	}
+	categoriesMap, err := GetCategoriesAsMap(s)
+	if err != nil {
+		return nil, err
+	}
+	manufacturersMap, err := GetManufacturersAsMap(s)
+	if err != nil {
+		return nil, err
+	}
 	products := []*types.Product{}
 	for rows.Next() {
 		product := new(types.Product)
-		err := s.parseProduct(rows, product)
+		err := parseProduct(rows, product)
 		if err != nil {
 			return nil, err
 		}
+
+		product.Manufacturer = manufacturersMap[product.Manufacturer.ID]
+		product.Category = categoriesMap[product.Category.ID]
 
 		products = append(products, product)
 	}
 	return products, nil
 }
 
-func (s *MariaDBStore) parseProduct(rows *sql.Rows, product *types.Product) error {
+func parseProduct(rows *sql.Rows, product *types.Product) error {
 	var manufacturerID, categoryID int
 	err := rows.Scan(
 		&product.ID,
@@ -147,17 +189,10 @@ func (s *MariaDBStore) parseProduct(rows *sql.Rows, product *types.Product) erro
 	if err != nil {
 		return err
 	}
-	manufacturer, err := s.GetManufacturerByID(manufacturerID)
-	if err != nil {
-		return err
-	}
-	category, err := s.GetCategoryByID(categoryID)
-	if err != nil {
-		return err
-	}
 
-	product.Manufacturer = manufacturer
-	product.Category = category
+	product.Manufacturer = &types.Manufacturer{ID: manufacturerID}
+	product.Category = &types.Category{ID: categoryID}
+
 	return nil
 }
 

@@ -24,3 +24,27 @@ type Storage interface {
 	LoginUser(*types.LoginRequest) (*types.User, error)
 	CreateUser(*types.CreateUserRequest) (*types.User, error)
 }
+
+func GetCategoriesAsMap(s Storage) (map[int]*types.Category, error) {
+	categories, err := s.GetCategories()
+	if err != nil {
+		return nil, err
+	}
+	categoriesMap := make(map[int]*types.Category)
+	for _, category := range categories {
+		categoriesMap[category.ID] = category
+	}
+	return categoriesMap, nil
+}
+
+func GetManufacturersAsMap(s Storage) (map[int]*types.Manufacturer, error) {
+	manufacturers, err := s.GetManufacturers()
+	if err != nil {
+		return nil, err
+	}
+	manufacturersMap := make(map[int]*types.Manufacturer)
+	for _, manufacturer := range manufacturers {
+		manufacturersMap[manufacturer.ID] = manufacturer
+	}
+	return manufacturersMap, nil
+}
