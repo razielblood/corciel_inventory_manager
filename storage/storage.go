@@ -11,8 +11,8 @@ type Storage interface {
 	CreateManufacturer(*types.Manufacturer) error
 	CreateProduct(*types.Product) error
 
-	UpdateCategory(*types.Product) error
-	UpdateManufacturer(*types.Product) error
+	UpdateCategory(*types.Category) error
+	UpdateManufacturer(*types.Manufacturer) error
 	UpdateProduct(*types.Product) error
 
 	GetCategoryByID(int) (*types.Category, error)

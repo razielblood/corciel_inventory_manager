@@ -68,6 +68,7 @@ func (s *APIServer) Run() {
 	{
 		auth.GET("/products", s.handleGetProducts)
 		auth.GET("/products/:id", s.handleGetProductByID)
+		auth.PUT("/products/:id", s.handleUpdateProduct)
 		auth.POST("/products", s.handlePostProduct)
 	}
 

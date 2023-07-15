@@ -27,6 +27,11 @@ func NewMariaDBStore(dbUsername, dbPass, dbHost, dbPort, dbName string) (*MariaD
 	if err != nil {
 		return nil, err
 	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
 	return &MariaDBStore{db: db}, nil
 }
 
@@ -47,17 +52,20 @@ func (s *MariaDBStore) CreateProduct(product *types.Product) error {
 	_, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID)
 	return err
 }
-func (db *MariaDBStore) UpdateCategory(product *types.Product) error {
-	fmt.Println("Under construction =)")
-	return nil
+func (s *MariaDBStore) UpdateCategory(category *types.Category) error {
+	query := "update Categories set Name = ?, Description = ? where ID = ?"
+	_, err := s.db.Query(query, category.Name, category.Description, category.ID)
+	return err
 }
-func (db *MariaDBStore) UpdateManufacturer(product *types.Product) error {
-	fmt.Println("Under construction =)")
-	return nil
+func (s *MariaDBStore) UpdateManufacturer(manufacturer *types.Manufacturer) error {
+	query := "update Manufacturers set Name = ? where ID = ?"
+	_, err := s.db.Query(query, manufacturer.Name, manufacturer.ID)
+	return err
 }
-func (db *MariaDBStore) UpdateProduct(product *types.Product) error {
-	fmt.Println("Under construction =)")
-	return nil
+func (s *MariaDBStore) UpdateProduct(product *types.Product) error {
+	query := "update Products set Name = ?, Description = ?, WeightInKG = ?, PiecesPerPackage, Image = ?, manufacturer = ?, category = ? where ID = ?"
+	_, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID, product.ID)
+	return err
 }
 func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) {
 	query := "select * from Categories where ID = ?"

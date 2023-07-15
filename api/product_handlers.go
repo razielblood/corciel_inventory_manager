@@ -21,13 +21,13 @@ func (s APIServer) handleGetProductByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, types.APIError{Message: err.Error()})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	product, err := s.store.GetProductByID(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, types.APIError{Message: err.Error()})
+		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 
@@ -41,6 +41,7 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 	// Call BindJSON to bind the received JSON to
 	// newProduct.
 	if err := c.BindJSON(newProductReq); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -52,4 +53,53 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusCreated, newProduct)
+}
+
+func (s APIServer) handleUpdateProduct(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, types.APIError{Message: err.Error()})
+		return
+	}
+
+	updateProductReq := new(types.UpdateProductRequest)
+
+	if err := c.BindJSON(updateProductReq); err != nil {
+		return
+	}
+
+	updateProduct, err := s.store.GetProductByID(id)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	updatedCategory, err := s.store.GetCategoryByID(updateProductReq.Category)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	updatedManufacturer, err := s.store.GetManufacturerByID(updateProductReq.Manufacturer)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	updateProduct.Name = updateProductReq.Name
+	updateProduct.Description = updateProductReq.Description
+	updateProduct.WeightInKG = updateProductReq.WeightInKG
+	updateProduct.PiecesPerPackage = updateProductReq.PiecesPerPackage
+	updateProduct.Image = updateProductReq.Image
+	updateProduct.Category = updatedCategory
+	updateProduct.Manufacturer = updatedManufacturer
+
+
+	if err := s.store.UpdateProduct(updateProduct); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, updateProduct)
 }

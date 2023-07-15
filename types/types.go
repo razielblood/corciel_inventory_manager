@@ -66,6 +66,17 @@ type CreateProductRequest struct {
 	Category         int     `json:"category"`
 }
 
+type UpdateProductRequest struct {
+	Id               int     `json:"id"`
+	Name             string  `json:"name"`
+	Description      string  `json:"description"`
+	WeightInKG       float64 `json:"weight_in_kg"`
+	PiecesPerPackage int     `json:"pieces_per_package"`
+	Image            string  `json:"image"`
+	Manufacturer     int     `json:"manufacturer"`
+	Category         int     `json:"category"`
+}
+
 type GetProductResponse struct {
 	ID               int     `json:"id"`
 	Name             string  `json:"name"`
