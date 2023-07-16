@@ -14,3 +14,8 @@ func CreateManufacturer(name string) *Manufacturer {
 type CreateManufacturerRequest struct {
 	Name string `json:"name"`
 }
+
+type UpdateManufacturerRequest struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}

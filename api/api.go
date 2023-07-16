@@ -68,8 +68,13 @@ func (s *APIServer) Run() {
 	{
 		auth.GET("/products", s.handleGetProducts)
 		auth.GET("/products/:id", s.handleGetProductByID)
-		auth.PUT("/products/:id", s.handleUpdateProduct)
+		auth.PUT("/products/:id", s.handlePutProduct)
 		auth.POST("/products", s.handlePostProduct)
+
+		auth.GET("/manufacturers", s.handleGetManufacturers)
+		auth.GET("/manufacturers/:id", s.handleGetManufacturerByID)
+		auth.PUT("/manufacturers/:id", s.handlePutManufacturer)
+		auth.POST("/manufacturers", s.handlePostManufacturer)
 	}
 
 	router.Run(fmt.Sprintf("%v:%v", s.listenAddr, s.listenPort))

@@ -55,7 +55,7 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newProduct)
 }
 
-func (s APIServer) handleUpdateProduct(c *gin.Context) {
+func (s APIServer) handlePutProduct(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {

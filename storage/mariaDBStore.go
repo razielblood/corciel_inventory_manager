@@ -41,15 +41,20 @@ func (s *MariaDBStore) CreateCategory(category *types.Category) error {
 	return err
 }
 func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
-	query := "insert into Manufacturers (Name) values (?)"
-	_, err := s.db.Query(query, manufacturer.Name)
+	query := "insert into Manufacturers (Name) values (?) returning ID"
+	result, err := s.db.Query(query, manufacturer.Name)
+	result.Next()
+	result.Scan(&manufacturer.ID)
+
 	return err
 }
 func (s *MariaDBStore) CreateProduct(product *types.Product) error {
 	query := `insert into Products (Name, Description, WeightInKG, PiecesPerPackage, Image, Manufacturer, Category) 
 	values 
-	(?, ?, ?, ?, ?, ?, ?)`
-	_, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID)
+	(?, ?, ?, ?, ?, ?, ?) returning ID`
+	result, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID)
+	result.Next()
+	result.Scan(&product.ID)
 	return err
 }
 func (s *MariaDBStore) UpdateCategory(category *types.Category) error {
@@ -73,7 +78,10 @@ func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) 
 	if err != nil {
 		return nil, err
 	}
-	rows.Next()
+	exists := rows.Next()
+	if !exists {
+		return nil, fmt.Errorf("category with id %v doesn't exists", categoryID)
+	}
 	category := new(types.Category)
 	rows.Scan(
 		&category.ID,
@@ -88,7 +96,10 @@ func (s *MariaDBStore) GetManufacturerByID(manufacturerID int) (*types.Manufactu
 	if err != nil {
 		return nil, err
 	}
-	rows.Next()
+	exists := rows.Next()
+	if !exists {
+		return nil, fmt.Errorf("manufacturer with id %v doesn't exists", manufacturerID)
+	}
 	manufacturer := new(types.Manufacturer)
 	rows.Scan(
 		&manufacturer.ID,
@@ -135,7 +146,7 @@ func (s *MariaDBStore) GetCategories() ([]*types.Category, error) {
 	return categories, nil
 }
 func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
-	query := "select (ID, Name) from Manufacturers"
+	query := "select ID, Name from Manufacturers"
 	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -158,6 +169,7 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	categoriesMap, err := GetCategoriesAsMap(s)
 	if err != nil {
 		return nil, err
