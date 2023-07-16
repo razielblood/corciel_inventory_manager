@@ -36,8 +36,10 @@ func NewMariaDBStore(dbUsername, dbPass, dbHost, dbPort, dbName string) (*MariaD
 }
 
 func (s *MariaDBStore) CreateCategory(category *types.Category) error {
-	query := "insert into Categories (Name, Description) values (?, ?)"
-	_, err := s.db.Query(query, category.Name, category.Description)
+	query := "insert into Categories (Name, Description) values (?, ?) returning ID"
+	result, err := s.db.Query(query, category.Name, category.Description)
+	result.Next()
+	result.Scan(&category.ID)
 	return err
 }
 func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
@@ -127,7 +129,7 @@ func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
 }
 
 func (s *MariaDBStore) GetCategories() ([]*types.Category, error) {
-	query := "select (ID, Name, Description) from Categories"
+	query := "select ID, Name, Description from Categories"
 	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err

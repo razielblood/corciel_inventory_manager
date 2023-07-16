@@ -11,7 +11,7 @@ import (
 func (s APIServer) handleGetProducts(c *gin.Context) {
 	products, err := s.store.GetProducts()
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, products)
@@ -21,13 +21,13 @@ func (s APIServer) handleGetProductByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	product, err := s.store.GetProductByID(id)
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -41,17 +41,27 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 	// Call BindJSON to bind the received JSON to
 	// newProduct.
 	if err := c.BindJSON(newProductReq); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	newProduct := types.CreateProduct(newProductReq.Name, newProductReq.Description, newProductReq.WeightInKG, newProductReq.PiecesPerPackage, newProductReq.Image, newProductReq.Manufacturer, newProductReq.Category)
 
 	if err := s.store.CreateProduct(newProduct); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	var err error
+	newProduct.Category, err = s.store.GetCategoryByID(newProduct.Category.ID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newProduct.Manufacturer, err = s.store.GetManufacturerByID(newProduct.Manufacturer.ID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	c.IndentedJSON(http.StatusCreated, newProduct)
 }
 
@@ -59,7 +69,7 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -71,19 +81,19 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 
 	updateProduct, err := s.store.GetProductByID(id)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	updatedCategory, err := s.store.GetCategoryByID(updateProductReq.Category)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	updatedManufacturer, err := s.store.GetManufacturerByID(updateProductReq.Manufacturer)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -96,7 +106,7 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 	updateProduct.Manufacturer = updatedManufacturer
 
 	if err := s.store.UpdateProduct(updateProduct); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

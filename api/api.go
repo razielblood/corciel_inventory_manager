@@ -75,6 +75,11 @@ func (s *APIServer) Run() {
 		auth.GET("/manufacturers/:id", s.handleGetManufacturerByID)
 		auth.PUT("/manufacturers/:id", s.handlePutManufacturer)
 		auth.POST("/manufacturers", s.handlePostManufacturer)
+
+		auth.GET("/categories", s.handleGetCategories)
+		auth.GET("/categories/:id", s.handleGetCategoryByID)
+		auth.PUT("/categories/:id", s.handlePutCategory)
+		auth.POST("/categories", s.handlePostCategory)
 	}
 
 	router.Run(fmt.Sprintf("%v:%v", s.listenAddr, s.listenPort))
