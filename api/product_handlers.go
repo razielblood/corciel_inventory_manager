@@ -59,7 +59,7 @@ func (s APIServer) handleUpdateProduct(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, types.APIError{Message: err.Error()})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -94,7 +94,6 @@ func (s APIServer) handleUpdateProduct(c *gin.Context) {
 	updateProduct.Image = updateProductReq.Image
 	updateProduct.Category = updatedCategory
 	updateProduct.Manufacturer = updatedManufacturer
-
 
 	if err := s.store.UpdateProduct(updateProduct); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)

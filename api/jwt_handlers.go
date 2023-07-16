@@ -69,7 +69,7 @@ func (s APIServer) handleSignUp(c *gin.Context) {
 	// Call BindJSON to bind the received JSON to
 	// newProduct.
 	if err := c.BindJSON(newUserReq); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, types.APIError{Message: err.Error()})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (s APIServer) handleSignUp(c *gin.Context) {
 	user, err := s.store.CreateUser(newUserReq)
 
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, types.APIError{Message: err.Error()})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
