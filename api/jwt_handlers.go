@@ -14,6 +14,9 @@ func payloadFunc(data interface{}) jwt.MapClaims {
 	if v, ok := data.(*types.User); ok {
 		return jwt.MapClaims{
 			identityKey: v.Username,
+			"FirstName": v.FirstName,
+			"LastName":  v.LastName,
+			"Email":     v.Email,
 		}
 	}
 	return jwt.MapClaims{}
@@ -22,14 +25,17 @@ func payloadFunc(data interface{}) jwt.MapClaims {
 func identityHandler(c *gin.Context) interface{} {
 	claims := jwt.ExtractClaims(c)
 	return &types.User{
-		Username: claims[identityKey].(string),
+		Username:  claims[identityKey].(string),
+		FirstName: claims["FirstName"].(string),
+		LastName:  claims["LastName"].(string),
+		Email:     claims["Email"].(string),
 	}
 }
 
 func (s APIServer) handleAuthentication(c *gin.Context) (interface{}, error) {
 	var loginVals types.LoginRequest
 	if err := c.ShouldBind(&loginVals); err != nil {
-		return "", jwt.ErrMissingLoginValues
+		return nil, jwt.ErrMissingLoginValues
 	}
 	loginRequest := types.CreateLoginRequest(loginVals.Username, getMD5Hash(loginVals.Password))
 
@@ -38,9 +44,7 @@ func (s APIServer) handleAuthentication(c *gin.Context) (interface{}, error) {
 	if err != nil {
 		return nil, jwt.ErrFailedAuthentication
 	}
-
 	return user, nil
-
 }
 
 func handleAuthorization(data interface{}, c *gin.Context) bool {
@@ -84,4 +88,14 @@ func (s APIServer) handleSignUp(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusCreated, user)
 
+}
+
+func (s APIServer) handleGetUserMe(c *gin.Context) {
+	claimsMap := jwt.ExtractClaims(c)
+	user, err := s.store.GetUserByID(claimsMap["id"].(string))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }

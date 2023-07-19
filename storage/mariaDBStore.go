@@ -196,6 +196,23 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 	return products, nil
 }
 
+func (s *MariaDBStore) GetUserByID(id string) (*types.User, error) {
+	query := "select Username, FirstName, LastName, Email, Password from Users where Username = ?"
+	rows := s.db.QueryRow(query, id)
+	user := new(types.User)
+	err := rows.Scan(
+		&user.Username,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.Password,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("username %v doesn't exist", id)
+	}
+	return user, nil
+}
+
 func (s *MariaDBStore) LoginUser(loginRequest *types.LoginRequest) (*types.User, error) {
 	query := "select Username, FirstName, LastName, Email from Users where Username = ? and Password= ?"
 	rows, err := s.db.Query(query, loginRequest.Username, loginRequest.Password)

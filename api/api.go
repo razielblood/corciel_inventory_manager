@@ -7,6 +7,7 @@ import (
 	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/razielblood/corciel_inventory_manager/storage"
 )
@@ -26,6 +27,11 @@ func NewAPIServer(listenAddr, listenPort string, store storage.Storage) *APIServ
 func (s *APIServer) Run() {
 	router := gin.Default()
 
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:3000"}
+	config.AllowCredentials = true
+	router.Use(cors.New(config))
+
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:           "test zone",
 		Key:             []byte(os.Getenv("CORCIEL_INVENTORY_JWT_SECRET")),
@@ -40,6 +46,11 @@ func (s *APIServer) Run() {
 		TokenLookup:     "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName:   "Bearer",
 		TimeFunc:        time.Now,
+		SendCookie:      true,
+		SecureCookie:    false,
+		CookieName:      "jwt",
+		CookieHTTPOnly:  true,
+		CookieMaxAge:    2 * time.Hour,
 	})
 
 	if err != nil {
@@ -66,6 +77,7 @@ func (s *APIServer) Run() {
 
 	auth.Use(authMiddleware.MiddlewareFunc())
 	{
+		auth.GET("/users/me", s.handleGetUserMe)
 		auth.GET("/products", s.handleGetProducts)
 		auth.GET("/products/:id", s.handleGetProductByID)
 		auth.PUT("/products/:id", s.handlePutProduct)

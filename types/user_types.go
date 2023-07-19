@@ -1,10 +1,11 @@
 package types
 
 type User struct {
-	Username  string
-	FirstName string
-	LastName  string
-	Email     string
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Password  string `json:"-"`
 }
 
 type LoginRequest struct {

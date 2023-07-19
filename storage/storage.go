@@ -23,6 +23,7 @@ type Storage interface {
 	GetManufacturers() ([]*types.Manufacturer, error)
 	GetProducts() ([]*types.Product, error)
 
+	GetUserByID(string) (*types.User, error)
 	LoginUser(*types.LoginRequest) (*types.User, error)
 	CreateUser(*types.CreateUserRequest) (*types.User, error)
 }
