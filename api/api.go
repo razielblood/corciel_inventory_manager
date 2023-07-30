@@ -64,6 +64,7 @@ func (s *APIServer) Run() {
 	}
 
 	router.POST("/login", authMiddleware.LoginHandler)
+	router.GET("/logout", authMiddleware.LogoutHandler)
 	router.POST("/sign-up", s.handleSignUp)
 	router.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
 		claims := jwt.ExtractClaims(c)
