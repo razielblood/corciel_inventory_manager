@@ -76,6 +76,7 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 	updateProductReq := new(types.UpdateProductRequest)
 
 	if err := c.BindJSON(updateProductReq); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

@@ -40,6 +40,7 @@ func (s *MariaDBStore) CreateCategory(category *types.Category) error {
 	result, err := s.db.Query(query, category.Name, category.Description)
 	result.Next()
 	result.Scan(&category.ID)
+	result.Close()
 	return err
 }
 func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
@@ -47,7 +48,7 @@ func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) erro
 	result, err := s.db.Query(query, manufacturer.Name)
 	result.Next()
 	result.Scan(&manufacturer.ID)
-
+	result.Close()
 	return err
 }
 func (s *MariaDBStore) CreateProduct(product *types.Product) error {
@@ -57,6 +58,7 @@ func (s *MariaDBStore) CreateProduct(product *types.Product) error {
 	result, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID)
 	result.Next()
 	result.Scan(&product.ID)
+	result.Close()
 	return err
 }
 func (s *MariaDBStore) UpdateCategory(category *types.Category) error {
@@ -67,11 +69,13 @@ func (s *MariaDBStore) UpdateCategory(category *types.Category) error {
 func (s *MariaDBStore) UpdateManufacturer(manufacturer *types.Manufacturer) error {
 	query := "update Manufacturers set Name = ? where ID = ?"
 	_, err := s.db.Query(query, manufacturer.Name, manufacturer.ID)
+
 	return err
 }
 func (s *MariaDBStore) UpdateProduct(product *types.Product) error {
-	query := "update Products set Name = ?, Description = ?, WeightInKG = ?, PiecesPerPackage, Image = ?, manufacturer = ?, category = ? where ID = ?"
+	query := "update Products set Name = ?, Description = ?, WeightInKG = ?, PiecesPerPackage = ?, Image = ?, manufacturer = ?, category = ? where ID = ?"
 	_, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Manufacturer.ID, product.Category.ID, product.ID)
+
 	return err
 }
 func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) {
@@ -90,6 +94,7 @@ func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) 
 		&category.Name,
 		&category.Description,
 	)
+	rows.Close()
 	return category, nil
 }
 func (s *MariaDBStore) GetManufacturerByID(manufacturerID int) (*types.Manufacturer, error) {
@@ -107,6 +112,7 @@ func (s *MariaDBStore) GetManufacturerByID(manufacturerID int) (*types.Manufactu
 		&manufacturer.ID,
 		&manufacturer.Name,
 	)
+	rows.Close()
 	return manufacturer, nil
 }
 func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
@@ -124,7 +130,7 @@ func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
 
 	product.Manufacturer, _ = s.GetManufacturerByID(product.Manufacturer.ID)
 	product.Category, _ = s.GetCategoryByID(product.Category.ID)
-
+	rows.Close()
 	return product, nil
 }
 
@@ -145,6 +151,7 @@ func (s *MariaDBStore) GetCategories() ([]*types.Category, error) {
 		}
 		categories = append(categories, category)
 	}
+	rows.Close()
 	return categories, nil
 }
 func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
@@ -163,6 +170,7 @@ func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
 		}
 		manufacturers = append(manufacturers, manufacturer)
 	}
+	rows.Close()
 	return manufacturers, nil
 }
 func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
@@ -193,6 +201,7 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 
 		products = append(products, product)
 	}
+	rows.Close()
 	return products, nil
 }
 
@@ -210,6 +219,7 @@ func (s *MariaDBStore) GetUserByID(id string) (*types.User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("username %v doesn't exist", id)
 	}
+
 	return user, nil
 }
 
@@ -230,6 +240,7 @@ func (s *MariaDBStore) LoginUser(loginRequest *types.LoginRequest) (*types.User,
 		&user.LastName,
 		&user.Email,
 	)
+	rows.Close()
 	return user, nil
 }
 
@@ -249,7 +260,7 @@ func (s *MariaDBStore) CreateUser(createUserRequest *types.CreateUserRequest) (*
 	if err != nil {
 		return nil, err
 	}
-
+	rows.Close()
 	query = "select Username, FirstName, LastName, Email from Users where Username = ?"
 	rows, err = s.db.Query(query, createUserRequest.Username)
 	if err != nil {
@@ -266,6 +277,6 @@ func (s *MariaDBStore) CreateUser(createUserRequest *types.CreateUserRequest) (*
 		&user.LastName,
 		&user.Email,
 	)
-
+	rows.Close()
 	return user, nil
 }
