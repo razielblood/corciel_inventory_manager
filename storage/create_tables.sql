@@ -7,11 +7,20 @@ create table if not exists Categories(
 	
 );
 
-drop table if exists Manufacturer;
+drop table if exists Manufacturers;
 
 create table if not exists Manufacturers(
 	ID	int auto_increment primary key,
 	Name varchar(255) not null unique
+);
+
+drop table if exists Brands;
+
+create table if not exists Brands(
+	ID int auto_increment primary key,
+	Name varchar(255) not null unique,
+	Manufacturer int,
+	foreign key (Manufacturer) references Manufacturers(ID)
 );
 
 drop table if exists Products;
@@ -23,9 +32,9 @@ create table if not exists Products(
 	WeightInKG float,
 	PiecesPerPackage int,
 	Image varchar(1024),
-	Manufacturer int,
+	Brand int,
 	Category int,
-	foreign key (Manufacturer) references Manufacturers(ID),
+	foreign key (Brand) references Brands(ID),
 	foreign key (Category) references Categories(ID)
 );
 
