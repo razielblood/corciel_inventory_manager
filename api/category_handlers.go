@@ -48,7 +48,9 @@ func (s APIServer) handlePostCategory(c *gin.Context) {
 
 	newCategory := types.CreateCategory(createCategoryReq.Name, createCategoryReq.Description)
 
-	s.store.CreateCategory(newCategory)
+	if err := s.store.CreateCategory(newCategory); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 
 	c.IndentedJSON(http.StatusCreated, newCategory)
 }

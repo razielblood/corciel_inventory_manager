@@ -38,10 +38,16 @@ func NewMariaDBStore(dbUsername, dbPass, dbHost, dbPort, dbName string) (*MariaD
 func (s *MariaDBStore) CreateCategory(category *types.Category) error {
 	query := "insert into Categories (Name, Description) values (?, ?) returning ID"
 	result, err := s.db.Query(query, category.Name, category.Description)
+	if err != nil {
+		return err
+	}
+	defer result.Close()
 	result.Next()
 	result.Scan(&category.ID)
-	result.Close()
-	return err
+	if category.ID == 0 {
+		return fmt.Errorf("error creating category")
+	}
+	return nil
 }
 func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
 	query := "insert into Manufacturers (Name) values (?) returning ID"
@@ -68,9 +74,12 @@ func (s *MariaDBStore) CreateBrand(brand *types.Brand) error {
 	if err != nil {
 		return err
 	}
+	defer result.Close()
 	result.Next()
 	result.Scan(&brand.ID)
-	result.Close()
+	if brand.ID == 0 {
+		return fmt.Errorf("error creating brand")
+	}
 	return nil
 }
 
@@ -94,7 +103,7 @@ func (s *MariaDBStore) UpdateProduct(product *types.Product) error {
 
 func (s *MariaDBStore) UpdateBrand(brand *types.Brand) error {
 	query := "update Brands set Name = ?, Manufacturer = ? where ID = ?"
-	_, err := s.db.Query(query, brand.Name, brand.ID)
+	_, err := s.db.Query(query, brand.Name, brand.Manufacturer.ID, brand.ID)
 	return err
 }
 

@@ -49,7 +49,7 @@ func (s APIServer) handlePostBrand(c *gin.Context) {
 	err := s.store.CreateBrand(newBrand)
 
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -64,16 +64,22 @@ func (s APIServer) handlePutBrand(c *gin.Context) {
 		return
 	}
 
-	updatedBrandReq := new(types.Brand)
+	updatedBrandReq := new(types.UpdateBrandRequest)
 
 	if err := c.BindJSON(updatedBrandReq); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	updatedBrand := types.CreateBrand(updatedBrandReq.Name, updatedBrandReq.Manufacturer.ID)
+	updatedBrand := types.CreateBrand(updatedBrandReq.Name, updatedBrandReq.Manufacturer)
 	updatedBrand.ID = id
 
-	s.store.UpdateBrand(updatedBrand)
+	err = s.store.UpdateBrand(updatedBrand)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, updatedBrand)
 }
