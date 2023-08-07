@@ -64,10 +64,10 @@ func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) erro
 	return nil
 }
 func (s *MariaDBStore) CreateProduct(product *types.Product) error {
-	query := `insert into Products (Name, Description, WeightInKG, PiecesPerPackage, Image, Brand, Category) 
+	query := `insert into Products (Name, Description, Image, Brand, Category) 
 	values 
-	(?, ?, ?, ?, ?, ?, ?) returning ID`
-	result, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Brand.ID, product.Category.ID)
+	(?, ?, ?, ?, ?) returning ID`
+	result, err := s.db.Query(query, product.Name, product.Description, product.Image, product.Brand.ID, product.Category.ID)
 	if err != nil {
 		return err
 	}
@@ -126,8 +126,8 @@ func (s *MariaDBStore) UpdateManufacturer(manufacturer *types.Manufacturer) erro
 	return nil
 }
 func (s *MariaDBStore) UpdateProduct(product *types.Product) error {
-	query := "update Products set Name = ?, Description = ?, WeightInKG = ?, PiecesPerPackage = ?, Image = ?, Brand = ?, Category = ? where ID = ?"
-	result, err := s.db.Exec(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Brand.ID, product.Category.ID, product.ID)
+	query := "update Products set Name = ?, Description = ?, Image = ?, Brand = ?, Category = ? where ID = ?"
+	result, err := s.db.Exec(query, product.Name, product.Description, product.Image, product.Brand.ID, product.Category.ID, product.ID)
 	if err != nil {
 		return err
 	}

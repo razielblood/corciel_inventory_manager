@@ -46,7 +46,7 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 		return
 	}
 
-	newProduct := types.CreateProduct(newProductReq.Name, newProductReq.Description, newProductReq.WeightInKG, newProductReq.PiecesPerPackage, newProductReq.Image, newProductReq.Brand, newProductReq.Category)
+	newProduct := types.CreateProduct(newProductReq.Name, newProductReq.Description, newProductReq.Image, newProductReq.Brand, newProductReq.Category)
 
 	if err := s.store.CreateProduct(newProduct); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -101,8 +101,6 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 
 	updateProduct.Name = updateProductReq.Name
 	updateProduct.Description = updateProductReq.Description
-	updateProduct.WeightInKG = updateProductReq.WeightInKG
-	updateProduct.PiecesPerPackage = updateProductReq.PiecesPerPackage
 	updateProduct.Image = updateProductReq.Image
 	updateProduct.Category = updatedCategory
 	updateProduct.Brand = updatedBrand

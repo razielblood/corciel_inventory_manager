@@ -54,8 +54,6 @@ func parseProduct(rows *sql.Rows, product *types.Product) error {
 		&product.ID,
 		&product.Name,
 		&product.Description,
-		&product.WeightInKG,
-		&product.PiecesPerPackage,
 		&product.Image,
 		&brandID,
 		&categoryID,

@@ -1,3 +1,7 @@
+drop table if exists ProductPresentation;
+drop table if exists Products;
+drop table if exists Brands;
+drop table if exists Manufacturers;
 drop table if exists Categories;
 
 create table if not exists Categories(
@@ -7,14 +11,10 @@ create table if not exists Categories(
 	
 );
 
-drop table if exists Manufacturers;
-
 create table if not exists Manufacturers(
 	ID	int auto_increment primary key,
 	Name varchar(255) not null unique
 );
-
-drop table if exists Brands;
 
 create table if not exists Brands(
 	ID int auto_increment primary key,
@@ -23,14 +23,10 @@ create table if not exists Brands(
 	foreign key (Manufacturer) references Manufacturers(ID)
 );
 
-drop table if exists Products;
-
 create table if not exists Products(
 	ID	int auto_increment primary key,
 	Name varchar(255) not null,
 	Description varchar(1024),
-	WeightInKG float,
-	PiecesPerPackage int,
 	Image varchar(1024),
 	Brand int,
 	Category int,
@@ -38,13 +34,10 @@ create table if not exists Products(
 	foreign key (Category) references Categories(ID)
 );
 
-drop table if exists Users;
-
-create table if not exists Users(
-	Username varchar(255) primary key,
-	Password varchar(255) not null,
-	FirstName varchar(255),
-	LastName varchar(255),
-	Email varchar(255),
-	CreatedAt timestamp default current_timestamp
+create table if not exists ProductPresentation(
+	Product int not null,
+	ID int primary key,
+	WeightInKG float,
+	PiecesPerPackage int,
+	foreign key (Product) references Products(ID)
 );
