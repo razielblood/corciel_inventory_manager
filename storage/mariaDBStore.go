@@ -52,20 +52,32 @@ func (s *MariaDBStore) CreateCategory(category *types.Category) error {
 func (s *MariaDBStore) CreateManufacturer(manufacturer *types.Manufacturer) error {
 	query := "insert into Manufacturers (Name) values (?) returning ID"
 	result, err := s.db.Query(query, manufacturer.Name)
+	if err != nil {
+		return err
+	}
+	defer result.Close()
 	result.Next()
 	result.Scan(&manufacturer.ID)
-	result.Close()
-	return err
+	if manufacturer.ID == 0 {
+		return fmt.Errorf("error creating manufacturer")
+	}
+	return nil
 }
 func (s *MariaDBStore) CreateProduct(product *types.Product) error {
 	query := `insert into Products (Name, Description, WeightInKG, PiecesPerPackage, Image, Brand, Category) 
 	values 
 	(?, ?, ?, ?, ?, ?, ?) returning ID`
 	result, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Brand.ID, product.Category.ID)
+	if err != nil {
+		return err
+	}
+	defer result.Close()
 	result.Next()
 	result.Scan(&product.ID)
-	result.Close()
-	return err
+	if product.ID == 0 {
+		return fmt.Errorf("error creating product")
+	}
+	return nil
 }
 
 func (s *MariaDBStore) CreateBrand(brand *types.Brand) error {
@@ -78,33 +90,71 @@ func (s *MariaDBStore) CreateBrand(brand *types.Brand) error {
 	result.Next()
 	result.Scan(&brand.ID)
 	if brand.ID == 0 {
-		return fmt.Errorf("error creating brand")
+		return fmt.Errorf("error creating brand: %v", result.Err().Error())
 	}
 	return nil
 }
 
 func (s *MariaDBStore) UpdateCategory(category *types.Category) error {
 	query := "update Categories set Name = ?, Description = ? where ID = ?"
-	_, err := s.db.Query(query, category.Name, category.Description, category.ID)
-	return err
+	result, err := s.db.Exec(query, category.Name, category.Description, category.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected")
+	}
+	return nil
 }
 func (s *MariaDBStore) UpdateManufacturer(manufacturer *types.Manufacturer) error {
 	query := "update Manufacturers set Name = ? where ID = ?"
-	_, err := s.db.Query(query, manufacturer.Name, manufacturer.ID)
-
-	return err
+	result, err := s.db.Exec(query, manufacturer.Name, manufacturer.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected")
+	}
+	return nil
 }
 func (s *MariaDBStore) UpdateProduct(product *types.Product) error {
 	query := "update Products set Name = ?, Description = ?, WeightInKG = ?, PiecesPerPackage = ?, Image = ?, Brand = ?, Category = ? where ID = ?"
-	_, err := s.db.Query(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Brand.ID, product.Category.ID, product.ID)
-
-	return err
+	result, err := s.db.Exec(query, product.Name, product.Description, product.WeightInKG, product.PiecesPerPackage, product.Image, product.Brand.ID, product.Category.ID, product.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected")
+	}
+	return nil
 }
 
 func (s *MariaDBStore) UpdateBrand(brand *types.Brand) error {
 	query := "update Brands set Name = ?, Manufacturer = ? where ID = ?"
-	_, err := s.db.Query(query, brand.Name, brand.Manufacturer.ID, brand.ID)
-	return err
+	result, err := s.db.Exec(query, brand.Name, brand.Manufacturer.ID, brand.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected")
+	}
+	return nil
 }
 
 func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) {
@@ -113,6 +163,7 @@ func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) 
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	exists := rows.Next()
 	if !exists {
 		return nil, fmt.Errorf("category with id %v doesn't exists", categoryID)
@@ -123,7 +174,6 @@ func (s *MariaDBStore) GetCategoryByID(categoryID int) (*types.Category, error) 
 		&category.Name,
 		&category.Description,
 	)
-	rows.Close()
 	return category, nil
 }
 func (s *MariaDBStore) GetManufacturerByID(manufacturerID int) (*types.Manufacturer, error) {
@@ -132,6 +182,7 @@ func (s *MariaDBStore) GetManufacturerByID(manufacturerID int) (*types.Manufactu
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	exists := rows.Next()
 	if !exists {
 		return nil, fmt.Errorf("manufacturer with id %v doesn't exists", manufacturerID)
@@ -141,7 +192,6 @@ func (s *MariaDBStore) GetManufacturerByID(manufacturerID int) (*types.Manufactu
 		&manufacturer.ID,
 		&manufacturer.Name,
 	)
-	rows.Close()
 	return manufacturer, nil
 }
 func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
@@ -150,6 +200,7 @@ func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	exists := rows.Next()
 	if !exists {
 		return nil, fmt.Errorf("product with id %v doesn't exists", productID)
@@ -157,9 +208,14 @@ func (s *MariaDBStore) GetProductByID(productID int) (*types.Product, error) {
 	product := new(types.Product)
 	parseProduct(rows, product)
 
-	product.Brand, _ = s.GetBrandByID(product.Brand.ID)
-	product.Category, _ = s.GetCategoryByID(product.Category.ID)
-	rows.Close()
+	product.Brand, err = s.GetBrandByID(product.Brand.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get brand %v: %v", product.Brand.ID, err.Error())
+	}
+	product.Category, err = s.GetCategoryByID(product.Category.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get category %v: %v", product.Category.ID, err.Error())
+	}
 	return product, nil
 }
 
@@ -175,10 +231,6 @@ func (s *MariaDBStore) GetBrandByID(brandID int) (*types.Brand, error) {
 		return nil, fmt.Errorf("brand with id %v doesn't exists", brandID)
 
 	}
-	manufacturersMap, err := GetManufacturersAsMap(s)
-	if err != nil {
-		return nil, err
-	}
 
 	brand := new(types.Brand)
 	err = parseBrand(result, brand)
@@ -186,7 +238,10 @@ func (s *MariaDBStore) GetBrandByID(brandID int) (*types.Brand, error) {
 		return nil, err
 	}
 
-	brand.Manufacturer = manufacturersMap[brand.Manufacturer.ID]
+	brand.Manufacturer, err = s.GetManufacturerByID(brand.Manufacturer.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get manufacturer %v: %v", brand.Manufacturer.ID, err.Error())
+	}
 
 	return brand, nil
 }
@@ -197,6 +252,7 @@ func (s *MariaDBStore) GetCategories() ([]*types.Category, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	categories := []*types.Category{}
 	for rows.Next() {
 		category := new(types.Category)
@@ -208,7 +264,6 @@ func (s *MariaDBStore) GetCategories() ([]*types.Category, error) {
 		}
 		categories = append(categories, category)
 	}
-	rows.Close()
 	return categories, nil
 }
 func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
@@ -217,6 +272,7 @@ func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	manufacturers := []*types.Manufacturer{}
 	for rows.Next() {
 		manufacturer := new(types.Manufacturer)
@@ -227,7 +283,6 @@ func (s *MariaDBStore) GetManufacturers() ([]*types.Manufacturer, error) {
 		}
 		manufacturers = append(manufacturers, manufacturer)
 	}
-	rows.Close()
 	return manufacturers, nil
 }
 func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
@@ -236,6 +291,7 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	categoriesMap, err := GetCategoriesAsMap(s)
 	if err != nil {
@@ -258,7 +314,6 @@ func (s *MariaDBStore) GetProducts() ([]*types.Product, error) {
 
 		products = append(products, product)
 	}
-	rows.Close()
 	return products, nil
 }
 
@@ -310,6 +365,7 @@ func (s *MariaDBStore) LoginUser(loginRequest *types.LoginRequest) (*types.User,
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	exists := rows.Next()
 	if !exists {
 		return nil, fmt.Errorf("username %v doesn't exists or the password is incorrect", loginRequest.Username)
@@ -321,7 +377,6 @@ func (s *MariaDBStore) LoginUser(loginRequest *types.LoginRequest) (*types.User,
 		&user.LastName,
 		&user.Email,
 	)
-	rows.Close()
 	return user, nil
 }
 

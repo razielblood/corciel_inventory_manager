@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,7 +12,7 @@ import (
 func (s APIServer) handleGetBrands(c *gin.Context) {
 	brands, err := s.store.GetBrands()
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -21,7 +22,7 @@ func (s APIServer) handleGetBrands(c *gin.Context) {
 func (s APIServer) handleGetBrandByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id '%v'", c.Param("id"))})
 		return
 	}
 
@@ -40,15 +41,13 @@ func (s APIServer) handlePostBrand(c *gin.Context) {
 	newBrandReq := new(types.CreateBrandRequest)
 
 	if err := c.BindJSON(newBrandReq); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	newBrand := types.CreateBrand(newBrandReq.Name, newBrandReq.Manufacturer)
 
-	err := s.store.CreateBrand(newBrand)
-
-	if err != nil {
+	if err := s.store.CreateBrand(newBrand); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -60,7 +59,7 @@ func (s APIServer) handlePutBrand(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id '%v'", c.Param("id"))})
 		return
 	}
 

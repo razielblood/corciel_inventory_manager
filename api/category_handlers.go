@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,7 +24,7 @@ func (s APIServer) handleGetCategoryByID(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id '%v'", c.Param("id"))})
 		return
 	}
 
@@ -59,7 +60,7 @@ func (s APIServer) handlePutCategory(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id '%v'", c.Param("id"))})
 		return
 	}
 	updateCategoryReq := new(types.CreateCategoryRequest)
