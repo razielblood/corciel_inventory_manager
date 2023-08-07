@@ -1,4 +1,4 @@
-drop table if exists ProductPresentation;
+drop table if exists ProductsPresentations;
 drop table if exists Products;
 drop table if exists Brands;
 drop table if exists Manufacturers;
@@ -34,7 +34,7 @@ create table if not exists Products(
 	foreign key (Category) references Categories(ID)
 );
 
-create table if not exists ProductPresentation(
+create table if not exists ProductsPresentations(
 	Product int not null,
 	ID int primary key,
 	WeightInKG float,
