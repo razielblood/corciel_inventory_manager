@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,7 +22,7 @@ func (s APIServer) handleGetProductByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id '%v'", c.Param("id"))})
 		return
 	}
 
@@ -45,7 +46,7 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 		return
 	}
 
-	newProduct := types.CreateProduct(newProductReq.Name, newProductReq.Description, newProductReq.WeightInKG, newProductReq.PiecesPerPackage, newProductReq.Image, newProductReq.Manufacturer, newProductReq.Category)
+	newProduct := types.CreateProduct(newProductReq.Name, newProductReq.Description, newProductReq.Image, newProductReq.Brand, newProductReq.Category)
 
 	if err := s.store.CreateProduct(newProduct); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -57,7 +58,7 @@ func (s APIServer) handlePostProduct(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	newProduct.Manufacturer, err = s.store.GetManufacturerByID(newProduct.Manufacturer.ID)
+	newProduct.Brand, err = s.store.GetBrandByID(newProduct.Brand.ID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -69,7 +70,7 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid id '%v'", c.Param("id"))})
 		return
 	}
 
@@ -92,7 +93,7 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 		return
 	}
 
-	updatedManufacturer, err := s.store.GetManufacturerByID(updateProductReq.Manufacturer)
+	updatedBrand, err := s.store.GetBrandByID(updateProductReq.Brand)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -100,11 +101,9 @@ func (s APIServer) handlePutProduct(c *gin.Context) {
 
 	updateProduct.Name = updateProductReq.Name
 	updateProduct.Description = updateProductReq.Description
-	updateProduct.WeightInKG = updateProductReq.WeightInKG
-	updateProduct.PiecesPerPackage = updateProductReq.PiecesPerPackage
 	updateProduct.Image = updateProductReq.Image
 	updateProduct.Category = updatedCategory
-	updateProduct.Manufacturer = updatedManufacturer
+	updateProduct.Brand = updatedBrand
 
 	if err := s.store.UpdateProduct(updateProduct); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
